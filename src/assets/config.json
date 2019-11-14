@@ -1,0 +1,7 @@
+{
+  "mapQuery": "/erddap/tabledap/30day_subset.json?platform_code%2Cplatform_type%2Ctime%2Clongitude%2Clatitude&distinct()&orderByMax(\"platform_code,time\")",
+  "depthParameterBase": "/erddap/tabledap/30day_subset.json?",
+  "timeseriesBase": "/erddap/tabledap/30day_subset.dataTable?time%2C",
+  "timeConstraint": "",
+  "initialZoom": 1
+}

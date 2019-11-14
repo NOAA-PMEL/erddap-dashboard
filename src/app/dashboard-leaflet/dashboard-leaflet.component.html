@@ -1,0 +1,7 @@
+<mat-progress-bar *ngIf="mapState.showProgress" color="primary" mode="query"></mat-progress-bar>
+<div id="lmap" style="height: 300px;"
+     leaflet
+     [leafletOptions]="options"
+     [leafletLayers]="layers"
+     (leafletMapReady)="onMapReady($event)">
+</div>

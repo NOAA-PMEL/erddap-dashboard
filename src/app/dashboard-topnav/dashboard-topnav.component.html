@@ -1,0 +1,9 @@
+<head>
+  {{ title }}
+</head>
+<h4>OSMC Dashboard</h4>
+<button (click)="mapState.reCenter()" mat-raised-button color="primary">Back to Overview</button>
+<button (click)="onOpen()" mat-raised-button color="primary">Help</button>
+<mat-error id="errorMessage" *ngIf="erddapDataService.errorMessage">{{erddapDataService.errorMessage}}</mat-error>
+<mat-label id="message" *ngIf="mapState.message">{{mapState.message}}</mat-label>
+

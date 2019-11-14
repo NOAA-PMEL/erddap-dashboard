@@ -1,0 +1,6 @@
+{
+  "/erddap": {
+    "target": "http://bilbo.weathertopconsulting.com:8282",
+    "secure": false
+  }
+}
