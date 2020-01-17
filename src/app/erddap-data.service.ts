@@ -3,11 +3,24 @@ import { HttpClient } from '@angular/common/http';
 import {AppConfigService} from './app-config.service';
 import {ErddapJson} from './erddap-json';
 import * as everpolate from 'everpolate';
+import {DatePipe} from '@angular/common';
+import {forEachToken} from 'tslint';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ErddapDataService {
+
+  // Manage the width of the plots
+  innerWidth: number = 640;
+  innerHeight: number = 480;
+  number_cols: any;
+  plot_count: number = 2;
+  number_surf_cols: number = 1;
+
+  map_columns = 4;
+  plot_columns = 8;
+
   bigNegative: number = -99999;
   bigPositive: number = 99999;
   duplicate_time = false;
@@ -15,7 +28,13 @@ export class ErddapDataService {
   platformType = undefined;
   plots;
   plotTitle;
-  showPlotProgress = false;
+  showProgressSurface = false;
+  showProgressProfiles = false;
+  surfacePlots = false;
+  profilePlots = false;
+  anyDataLoaded = false;
+  csv;
+  netcdf;
   dataUrl = '/erddap/tabledap/30day_subset.dataTable?time%2C';
   depthUrl = '/erddap/tabledap/30day_subset.dataTable?';
   depthConstrained;
@@ -63,7 +82,7 @@ export class ErddapDataService {
   timeConstraint = '';
   linear = everpolate.linear;
   dive_count: number = 1;
-  constructor(private httpClient: HttpClient, private  appConfig: AppConfigService) {
+  constructor(private httpClient: HttpClient, private  appConfig: AppConfigService, private datePipe: DatePipe) {
     this.vars = new Map();
     this.has = new Map();
     this.vars.set('AUTONOMOUS PINNIPEDS', ['ztmp']);
@@ -108,11 +127,26 @@ export class ErddapDataService {
   hasData(dataTable: google.visualization.DataTable, view: number[]): boolean {
     const range = dataTable.getColumnRange(view[1]);
     if ( range.min || range.max ) {
+      if ( range.min === range.max ) {
+        return false;
+      }
       return true;
     }
     return false;
   }
+  anyData() {
+    let b:boolean = true;
+    this.has.forEach((value: boolean, key: string) => {
+      if ( value ) {
+        b = b && value;
+      }
+    });
+    return b;
+  }
   getSurface(platformCode, platformType) {
+    this.profilePlots = false;
+    this.surfacePlots = true;
+    this.anyDataLoaded = false;
     this.platformCode = platformCode;
     this.platformType = platformType;
     for ( const key of this.has.keys() ) {
@@ -120,7 +154,7 @@ export class ErddapDataService {
     }
     this.plots = this.vars.get(platformType);
     this.plotTitle = this.platformCode + '-' + this.platformType;
-    this.showPlotProgress = true;
+    this.showProgressSurface = true;
     console.log('Setting platform code to ' + platformCode);
     if (!this.platformCode) {
       return;
@@ -144,6 +178,7 @@ export class ErddapDataService {
     this.get_zsal = false;
     this.get_ztmp = false;
     this.get_surf = false;
+    this.plot_count = 0;
     this.plots.forEach(aPlotVar => {
         if ( aPlotVar === 'sst' ) {
           this.sstView.push(index);
@@ -208,197 +243,266 @@ export class ErddapDataService {
     }
     this.constrained = this.dataUrl + erddapVarsList + '&platform_code="' + this.platformCode + '"&orderBy("time")' + constraint;
     if ( this.get_surf ) {
+      this.csv = this.constrained.replace("dataTable", "csv");
+      this.netcdf = this.constrained.replace("dataTable", "ncCF")
       console.log('Requesting ' + this.constrained);
       return this.httpClient.get<string>(this.constrained).subscribe(value => {
         this.dataTable = new google.visualization.DataTable(value);
+        const myDaterange = this.datePipe.transform(this.dataTable.getValue(0,0), 'yyyy-MM-dd', 'UTC') + ' to ' +
+                            this.datePipe.transform(this.dataTable.getValue(this.dataTable.getNumberOfRows() - 1, 0), 'yyyy-MM-dd', 'UTC');
         this.plots.forEach(aPlotVar => {
-            const myTitle = this.plotTitle + ' -- ' + aPlotVar;
             if (aPlotVar === 'sst') {
+              const myTitle = this.dataTable.getColumnLabel(this.sstView[1]) + ' -- ' + this.plotTitle;
               this.sstChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.sstView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.sstView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'atmp') {
+              const myTitle = this.dataTable.getColumnLabel(this.atmpView[1]) + ' -- ' + this.plotTitle;
               this.atmpChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.atmpView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.atmpView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'slp') {
+              const myTitle = this.dataTable.getColumnLabel(this.slpView[1]) + ' -- ' + this.plotTitle;
               this.slpChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.slpView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.slpView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'windspd') {
+              const myTitle = this.dataTable.getColumnLabel(this.windspdView[1]) + ' -- ' + this.plotTitle;
               this.windspdChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.windspdView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.windspdView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'winddir') {
+              const myTitle = this.dataTable.getColumnLabel(this.winddirView[1]) + ' -- ' + this.plotTitle;
               this.winddirChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.winddirView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.winddirView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'wvht') {
+              const myTitle = this.dataTable.getColumnLabel(this.wvhtView[1]) + ' -- ' + this.plotTitle;
               this.wvhtChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.wvhtView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.wvhtView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'dewpoint') {
+              const myTitle = this.dataTable.getColumnLabel(this.dewpointView[1]) + ' -- ' + this.plotTitle;
               this.dewpointChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.dewpointView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.dewpointView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'clouds') {
+              const myTitle = this.dataTable.getColumnLabel(this.cloudsView[1]) + ' -- ' + this.plotTitle;
               this.cloudsChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.cloudsView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.cloudsView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'water_col_ht') {
+              const myTitle = this.dataTable.getColumnLabel(this.water_col_htView[1]) + ' -- ' + this.plotTitle;
               this.water_col_htChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.water_col_htView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.water_col_htView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'precip') {
+              const myTitle = this.dataTable.getColumnLabel(this.precipView[1]) + ' -- ' + this.plotTitle;
               this.precipChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.precipView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.precipView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'waterlevel_met_res') {
+              const myTitle = this.dataTable.getColumnLabel(this.waterlevel_met_resView[1]) + ' -- ' + this.plotTitle;
               this.waterlevel_met_resChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.waterlevel_met_resView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.waterlevel_met_resView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             } else if (aPlotVar === 'waterlevel_wrt_lcd') {
+              const myTitle = this.dataTable.getColumnLabel(this.waterlevel_wrt_lcdView[1]) + ' -- ' + this.plotTitle;
               this.waterlevel_wrt_lcdChartData = {
                 chartType: 'LineChart',
                 dataTable: this.dataTable,
                 view: {columns: this.waterlevel_wrt_lcdView},
                 options: {
                   title: myTitle,
+                  legend: {position: 'none'},
                   explorer: {
                     axis: 'horizontal'
-                  }
+                  },
+                  hAxis: {textPosition: 'none', title: myDaterange},
+                  // chartArea:{left:20, right: 20}
                 }
               };
               if (this.hasData(this.dataTable, this.waterlevel_wrt_lcdView)) {
                 this.has.set(aPlotVar, true);
+                this.plot_count++;
               }
             }
           }
         );
-        this.showPlotProgress = false;
+        if ( this.plot_count > 4 ) {
+          this.number_surf_cols = 2;
+        } else {
+          this.number_surf_cols = 1;
+        }
+        this.anyDataLoaded = this.anyData();
+        this.showProgressSurface = false;
       }, error => {
-        this.showPlotProgress = false;
+        this.showProgressSurface = false;
         this.errorMessage = 'An error occurred getting the data for the surface timeseries plots.';
       });
     }
@@ -419,6 +523,8 @@ export class ErddapDataService {
     }
   }
   getDepth(platformCode, platformType) {
+    this.surfacePlots = false;
+    this.profilePlots = true;
     this.platformCode = platformCode;
     this.platformType = platformType;
     this.dive_count = 1;
@@ -427,7 +533,7 @@ export class ErddapDataService {
     }
     this.plots = this.vars.get(platformType);
     this.plotTitle = this.platformCode + '-' + this.platformType;
-    this.showPlotProgress = true;
+    this.showProgressProfiles = true;
     console.log('Setting platform code to ' + platformCode);
     if (!this.platformCode) {
       return;
@@ -462,6 +568,8 @@ export class ErddapDataService {
       this.ztmpView.push(1);
       this.ztmp_col = 1;
     }
+    this.csv = this.depthConstrained.replace("json","csv");
+    this.netcdf = this.depthConstrained.replace("json", "ncCF");
     if ( this.get_ztmp || this.get_zsal ) {
       console.log('Fetching ' + this.depthConstrained);
       return this.httpClient.get<ErddapJson>(this.depthConstrained).subscribe(value => {
@@ -508,7 +616,7 @@ export class ErddapDataService {
             // Start of a new dive
             let new_time = rowvalues[3];
             if (!x.includes(new_time)) {
-              x.push(rowvalues[3]);
+              x.push('Profile at ' + rowvalues[3]);
               this.duplicate_time = false;
             } else {
               this.duplicate_time = true;
@@ -528,7 +636,7 @@ export class ErddapDataService {
               this.dive_count++;
               previous_depth = this.bigNegative;
               depth_index = 0;
-              x.push(current_time);
+              x.push('Profile at ' + current_time);
               ysal = [];
               ytmp = [];
               ztmp_hold = [];
@@ -567,37 +675,84 @@ export class ErddapDataService {
 
         if ( sal.length > 0 ) {
           this.has.set('zsal', this.get_zsal);
+          this.plot_count = this.plot_count + 2;
         }
         if ( tmp.length > 0 ) {
           this.has.set('ztmp', this.get_ztmp);
+          // This count double since they are always on their own line TODO for now
+          this.plot_count = this.plot_count + 2;
         }
         let ticks = this.dive_count;
         if ( ticks > 10 ) ticks = 10;
 
+        let profile_based_width = (this.dive_count * 25) + 450;
+        const half = this.innerWidth / 2;
+        if ( profile_based_width >  half ) {
+          this.number_cols = 1;
+          profile_based_width = Math.min(this.innerWidth, profile_based_width)
+        } else {
+          this.number_cols = 2;
+        }
+
         if ( this.dive_count === 1) {
           this.tmpPlotType = 'heatmap';
         } else {
-          this.tmpPlotType = 'contour'
+          this.tmpPlotType = 'heatmap'
         }
+        let myDaterange = this.datePipe.transform(x[0].replace('Profile at ', ''), 'yyyy-MM-dd', 'UTC');
+        if ( this.dive_count > 1 ) {
+          myDaterange = myDaterange + ' to ' + this.datePipe.transform(x[x.length-1].replace('Profile at ', ''),  'yyyy-MM-dd', 'UTC');
+        }
+        const zsal_title = this.plotTitle + ' <br>depth vs zsal';
         this.zsalChartData = {
           data: [
             { x: x, y: yref_sal, z: sal,
-              type: this.tmpPlotType },
+              type: this.tmpPlotType,
+              xgap: 2
+            },
           ],
-          layout: {height: 550, title: 'depth vs zsal', yaxis: {autorange: 'reversed'}, xaxis: {nticks: ticks}}
+          layout: {
+            autosize: true,
+            width: profile_based_width,
+            height: this.depthPlotHeight(),
+            title: zsal_title,
+            yaxis: {automargin: true, autorange: 'reversed'},
+            xaxis: {
+              ticks: '',
+              showticklabels: false,
+              title: {
+                text: myDaterange
+              }
+            }
+          }
         };
 
+        const ztmp_title =  this.plotTitle + '<br>depth vs ztmp';
         this.ztmpChartData  = {
           data: [
             { x: x, y: yref_tmp, z: tmp,
-              type: this.tmpPlotType },
+              type: this.tmpPlotType,
+              xgap: 2
+            },
           ],
-          layout: {height: 550, title: 'depth vs ztmp', yaxis: {autorange: 'reversed'}, xaxis: {nticks: ticks}}
+          layout: {
+            autosize: true,
+            width: profile_based_width,
+            height: this.depthPlotHeight(),
+            title: ztmp_title,
+            yaxis: {automargin: true, autorange: 'reversed'},
+            xaxis: {
+              ticks: '',
+              showticklabels: false,
+              title: {
+                text: myDaterange}
+            }
+          }
         };
 
-        this.showPlotProgress = false;
+        this.showProgressProfiles = false;
       }, error => {
-        this.showPlotProgress = false;
+        this.showProgressProfiles = false;
         this.errorMessage = 'An error occurred getting the data for the depth plots.';
       });
     }
@@ -617,7 +772,7 @@ export class ErddapDataService {
       if (this.dive_count === 1) {
         let salrow: any[] = [];
         if (referenceY[j] <= currentY[currentY.length - 1] && referenceY[j] >= currentY[0]) {
-          salrow.push(currentDive[j]);
+          salrow.push(dive_interp[j]);
         } else {
           salrow.push(null)
         }
@@ -647,5 +802,73 @@ export class ErddapDataService {
       f.splice(startrm, countrm);
       y.splice(startrm, countrm);
     }
+  }
+  mapWidth() {
+    const mw = (this.innerWidth*(this.map_columns/12)) - 10;
+    return mw+'px';
+  }
+  totalPlotsWidth() {
+    const pw = (this.innerWidth*(this.plot_columns/12)) - 10;
+    return pw + 'px';
+  }
+  plotWidth() {
+    let num_plot_col = 2;
+    if ( this.plot_count <= 4 ) {
+      num_plot_col = 1;
+    }
+    const ncols = this.plot_columns / num_plot_col;
+    const pw = (this.innerWidth * (ncols / 12) - 25);
+    return pw+'px';
+  }
+  mapHeight() {
+    const mh = this.rowHeight()-110;  // Height of the header (75)  plus a little bit
+    return mh+'px';
+  }
+  plotHeight(){
+    let ph;
+    if ( this.plot_count > 4 ) {
+      ph = this.innerHeight/((this.plot_count/2)+1) - 20;
+    } else if (this.plot_count > 2 && this.plot_count <= 4 ) {
+      ph = this.innerHeight/this.plot_count - 20;
+    } else {
+      ph = this.innerHeight/2 - 20;
+    }
+    return ph+'px';
+  }
+  depthPlotHeight() {
+    const ph = this.innerHeight/((this.plot_count/2)+1) - 400;
+    return ph+'px';
+  }
+  mapStyles() {
+    const s = {
+      'width':this.mapWidth(),
+      'height':this.mapHeight(),
+      'margin-bottom':'20px'
+    };
+    return s;
+  }
+  plotStyles() {
+    const s = {
+      'width': this.plotWidth(),
+      'height': this.plotHeight()
+    }
+    return s;
+  }
+  ngPlotWidth() {
+    const s = {
+      'width': this.totalPlotsWidth(),
+    }
+    return s;
+  }
+  rowHeight() {
+    const rh = this.innerHeight - 20;
+    return rh;
+  }
+  outerDiv() {
+    const s = {
+      'height':this.rowHeight() - 75,
+      'width':this.totalPlotsWidth()
+    }
+    return s;
   }
 }

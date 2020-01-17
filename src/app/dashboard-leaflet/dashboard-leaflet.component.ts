@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnInit} from '@angular/core';
+import {Component, ElementRef, HostListener, OnInit} from '@angular/core';
 import { latLng, marker, tileLayer, icon, Layer } from 'leaflet';
 import {MapStateService} from '../map-state.service';
 import {ErddapDataService} from '../erddap-data.service';
@@ -19,21 +19,32 @@ export class DashboardLeafletComponent implements OnInit {
     addEventListener('plot', (evt: CustomEvent) => {
       const code = evt.detail.code;
       const type = evt.detail.type;
+      const plot_type = evt.detail.plot_type;
       mapState.message = undefined;
       erddapDataService.errorMessage = undefined;
-      erddapDataService.getSurface(code, type);
-      erddapDataService.getDepth(code, type);
+      if ( plot_type === 'surface' ) {
+        erddapDataService.getSurface(code, type);
+      } else {
+        erddapDataService.getDepth(code, type);
+      }
     });
   }
 
   ngOnInit() {
+    this.onResize()
     this.options = {
       zoom: 5,
       center: latLng(this.mapState.currentLat, this.mapState.currentLon)
     };
     this.layers.push(tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '...' }));
   }
+  @HostListener('window:resize', ['$event'])
+  onResize(event?) {
+    this.erddapDataService.innerWidth = window.innerWidth;
+    this.erddapDataService.innerHeight = window.innerHeight;
+  }
   onMapReady($event) {
+    this.onResize();
     this.mapState.showProgress = true;
     this.getGloabalMarkers();
   }
@@ -58,13 +69,22 @@ export class DashboardLeafletComponent implements OnInit {
                   iconUrl: this.mapState.getMarkerColor(row[1])
                 }),
               }
-            ).bindPopup(fl => this.makeMarkerPopup(row));
+            ).bindPopup(fl => this.makeMarkerPopup(row, this.mapState.plotTypes(row[1])));
             newMarker.on('popupopen', function() {
-              let b = document.getElementById(row[0]);
-              b.addEventListener('click', (event: Event) => {
-                let c_event = new CustomEvent("plot", {detail: {code: row[0], type: row[1]}, bubbles: true});
-                b.dispatchEvent(c_event);
-              });
+              let b = document.getElementById(row[0] + "_surface");
+              if ( b ) {
+                b.addEventListener('click', (event: Event) => {
+                  let c_event = new CustomEvent("plot", {detail: {code: row[0], type: row[1], plot_type: 'surface'}, bubbles: true});
+                  b.dispatchEvent(c_event);
+                });
+              }
+              let p = document.getElementById(row[0] + "_profile");
+              if (p) {
+                p.addEventListener('click', (event: Event) => {
+                  let c_event = new CustomEvent("plot", {detail: {code: row[0], type: row[1], plot_type: 'profile'}, bubbles: true});
+                  p.dispatchEvent(c_event);
+                });
+              }
             });
             this.index++;
             this.layers.push(newMarker);
@@ -85,12 +105,18 @@ export class DashboardLeafletComponent implements OnInit {
           this.mapState.showProgress = false;
         });
   }
-  makeMarkerPopup(row: any) {
-    const content ='<h1>Platform Code = ' + row[0] + '</h1>' +
+  makeMarkerPopup(row: any, plotType: string) {
+    let content = '<h1>Platform Code = ' + row[0] + '</h1>' +
       '<hr>' +
       '<h3>Platform Type = ' + row[1] + '</h3>' +
-      '<h3>Most recent reporting time = ' + row[2] + '</h3>' +
-      '<button id="' + row[0] + '" color="primary" mat-raised-button="" class="mat-raised-button mat-button-base mat-primary" ng-reflect-color="primary"><span class="mat-button-wrapper">See Plots</span><div class="mat-button-ripple mat-ripple" matripple="" ng-reflect-centered="false" ng-reflect-disabled="false" ng-reflect-trigger="[object HTMLButtonElement]"></div><div class="mat-button-focus-overlay"></div></button>'
+      '<h3>Most recent reporting time = ' + row[2] + '</h3>';
+    if ( plotType === 'both' || plotType === 'surface' ) {
+      content = content + '<button id="' + row[0] + '_surface" color="primary" mat-raised-button="" class="mat-raised-button mat-button-base mat-primary" ng-reflect-color="primary"><span class="mat-button-wrapper">Timeseries</span><div class="mat-button-ripple mat-ripple" matripple="" ng-reflect-centered="false" ng-reflect-disabled="false" ng-reflect-trigger="[object HTMLButtonElement]"></div><div class="mat-button-focus-overlay"></div></button>'
+    }
+    if ( plotType === 'both' || plotType === 'profile' ) {
+      content = content + '<button id="' + row[0] + '_profile" color="primary" mat-raised-button="" class="mat-raised-button mat-button-base mat-primary" ng-reflect-color="primary"><span class="mat-button-wrapper">Profiles</span><div class="mat-button-ripple mat-ripple" matripple="" ng-reflect-centered="false" ng-reflect-disabled="false" ng-reflect-trigger="[object HTMLButtonElement]"></div><div class="mat-button-focus-overlay"></div></button>'
+    }
+
     return content;
   }
 }

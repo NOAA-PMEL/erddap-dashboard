@@ -75,4 +75,32 @@ export class MapStateService {
     if ( platformType === 'WEATHER OBS') { return 'assets/icons/icon025.png'; }
     return 'assets/icons/icon026.png';
   }
+  plotTypes(platformType) {
+    if ( platformType === 'AUTONOMOUS PINNIPEDS') { return 'profile'; }
+    if ( platformType === 'C-MAN WEATHER STATIONS' ) {return 'surface'; }
+    if ( platformType === 'CLIMATE REFERENCE MOORED BUOYS' ) { return 'profile'; }
+    if ( platformType === 'DRIFTING BUOYS (GENERIC)') { return 'surface'; }
+    if ( platformType === 'GLIDERS') { return 'profile'; }
+    if ( platformType === 'GLOSS') {return 'both'} // Undefined for variables?
+    if ( platformType === 'ICE BUOYS') {return 'both'} // Undefined for variables?
+    if ( platformType === 'MOORED BUOYS (GENERIC)') { return 'surface'; }
+    if ( platformType === 'OCEAN TRANSPORT STATIONS (GENERIC)') { return 'profile'; }
+    if ( platformType === 'PROFILING FLOATS AND GLIDERS (GENERIC)') { return 'profile'; }
+    if ( platformType === 'RESEARCH') { return 'surface'; }
+    if ( platformType === 'SHIPS (GENERIC)') { return 'surface'; }
+    if ( platformType === 'SHIPS' ) {return 'surface'}  // Undefined for variables
+    if ( platformType === 'SHORE AND BOTTOM STATIONS (GENERIC)') { return 'both'; }
+    if ( platformType === 'TIDE GAUGE STATIONS (GENERIC)') { return 'surface'; }
+    if ( platformType === 'TROPICAL MOORED BUOYS') { return 'both'; }
+    if ( platformType === 'TSUNAMI WARNING STATIONS') { return 'surface'; }
+    if ( platformType === 'UNKNOWN') { return 'surface'; }
+    if ( platformType === 'UNMANNED SURFACE VEHICLE' ) {return 'both'} // Undefined for variables
+    if ( platformType === 'VOLUNTEER OBSERVING SHIPS') { return 'surface'; }
+    if ( platformType === 'VOLUNTEER OBSERVING SHIPS (GENERIC)') { return 'surface'; }
+    if ( platformType === 'VOSCLIM') { return 'surface'; }
+    if ( platformType === 'WEATHER AND OCEAN OBS') { return 'surface'; }
+    if ( platformType === 'WEATHER BUOYS') { return 'surface'; }
+    if ( platformType === 'WEATHER OBS') { return 'surface'; }
+    return 'both';
+  }
 }

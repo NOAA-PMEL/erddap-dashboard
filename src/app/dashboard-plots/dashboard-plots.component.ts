@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, HostListener, OnInit} from '@angular/core';
 import {MapStateService} from '../map-state.service';
 import {ErddapDataService} from '../erddap-data.service';
 
@@ -9,12 +9,13 @@ import {ErddapDataService} from '../erddap-data.service';
 })
 export class DashboardPlotsComponent implements OnInit {
   dynamicResize = true;
-  ztmpGraph;
   graph;
   constructor(public mapState: MapStateService,
               public erddapDataService: ErddapDataService) {
   }
 
   ngOnInit() {
+
   }
+
 }

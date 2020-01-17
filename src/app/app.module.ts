@@ -10,7 +10,7 @@ import { PlotlyModule } from 'angular-plotly.js';
 import { GoogleChartsModule } from 'angular-google-charts';
 
 import {MatButtonModule} from '@angular/material/button';
-import {MatDialogModule, MatExpansionModule} from '@angular/material';
+import {MatCardModule, MatDialogModule, MatExpansionModule, MatProgressSpinnerModule} from '@angular/material';
 import {MatProgressBarModule} from '@angular/material';
 import {MatFormFieldModule} from '@angular/material';
 import {MatGridListModule} from '@angular/material/grid-list';
@@ -23,6 +23,9 @@ import {HelpDialogComponent} from './help-dialog/help-dialog.component';
 import {MapStateService} from './map-state.service';
 import {ErddapDataService} from './erddap-data.service';
 import {AppConfigService} from './app-config.service';
+import { DashboardLayoutComponent } from './dashboard-layout/dashboard-layout.component';
+import {DatePipe} from '@angular/common';
+import { DashboardProfileComponent } from './dashboard-profile/dashboard-profile.component';
 
 PlotlyModule.plotlyjs = PlotlyJS;
 
@@ -32,7 +35,9 @@ PlotlyModule.plotlyjs = PlotlyJS;
     DashboardPlotsComponent,
     DashboardLeafletComponent,
     DashboardTopnavComponent,
-    HelpDialogComponent
+    HelpDialogComponent,
+    DashboardLayoutComponent,
+    DashboardProfileComponent
   ],
   entryComponents: [HelpDialogComponent],
   imports: [
@@ -49,7 +54,9 @@ PlotlyModule.plotlyjs = PlotlyJS;
     MatFormFieldModule,
     MatGridListModule,
     MatIconModule,
-    MatDialogModule
+    MatDialogModule,
+    MatCardModule,
+    MatProgressSpinnerModule
   ],
   providers: [MapStateService, ErddapDataService,
     {
@@ -62,7 +69,7 @@ PlotlyModule.plotlyjs = PlotlyJS;
           return appConfigService.loadAppConfig();
         };
       }
-    }],
+    }, DatePipe],
   bootstrap:  [AppComponent]
 })
 export class AppModule { }

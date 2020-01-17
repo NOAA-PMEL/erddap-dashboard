@@ -1,21 +1,10 @@
-google-chart {
-  height: 450px;
-  width: 85vw;
-}
 raw-chart {
   height: 450px;
   width: 85vw;
 }
-mat-progress-bar {
-  width: 85vw;
-}
-mat-grid-list {
-  width: 85vw;
-}
 #zsal {
-  height: 450px;
+  height: 600px;
 }
 #ztmp {
-  height: 450px;
+  height: 600px;
 }
-

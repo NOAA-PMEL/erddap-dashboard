@@ -1,73 +1,109 @@
-<mat-progress-bar *ngIf="erddapDataService.showPlotProgress" color="primary" mode="query"></mat-progress-bar>
-<mat-grid-list *ngIf="erddapDataService.has.get('zsal') || erddapDataService.has.get('ztmp')" cols="2" rowHeight="600">
-  <mat-grid-tile>
-    <plotly-plot id="zsal" *ngIf="erddapDataService.has.get('zsal')" [data]="erddapDataService.zsalChartData.data" [layout]="erddapDataService.zsalChartData.layout"></plotly-plot>
-  </mat-grid-tile>
-  <mat-grid-tile>
-    <plotly-plot id="ztmp" *ngIf="erddapDataService.has.get('ztmp')" [data]="erddapDataService.ztmpChartData.data" [layout]="erddapDataService.ztmpChartData.layout"></plotly-plot>
-  </mat-grid-tile>
-</mat-grid-list>
-<raw-chart  *ngIf="erddapDataService.has.get('sst')"
-            [chartData]="erddapDataService.sstChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart  *ngIf="erddapDataService.has.get('atmp')"
-            [chartData]="erddapDataService.atmpChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart  *ngIf="erddapDataService.has.get('precip')"
-            [chartData]="erddapDataService.precipChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart  *ngIf="erddapDataService.has.get('slp')"
-            [chartData]="erddapDataService.slpChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart  *ngIf="erddapDataService.has.get('windspd')"
-            [chartData]="erddapDataService.windspdChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart  *ngIf="erddapDataService.has.get('winddir')"
-            [chartData]="erddapDataService.winddirChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart  *ngIf="erddapDataService.has.get('wvht')"
-            [chartData]="erddapDataService.wvhtChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart *ngIf="erddapDataService.has.get('dewpoint')"
-            [chartData]="erddapDataService.dewpointChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart  *ngIf="erddapDataService.has.get('clouds')"
-            [chartData]="erddapDataService.cloudsChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart  *ngIf="erddapDataService.has.get('water_col_ht')"
-            [chartData]="erddapDataService.water_col_htChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart  *ngIf="erddapDataService.has.get('waterlevel_met_res')"
-            [chartData]="erddapDataService.waterlevel_met_resChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-<raw-chart  *ngIf="erddapDataService.has.get('waterlevel_wrt_lcd')"
-            [chartData]="erddapDataService.waterlevel_wrt_lcdChartData"
-            [dynamicResize]="dynamicResize"
->
-</raw-chart>
-
-
-
-
+<div [ngStyle]="erddapDataService.outerDiv()">
+  <div style="margin-left: 60px" *ngIf="erddapDataService.anyDataLoaded">
+    Data: <a mat-raised-button color="primary" href="{{erddapDataService.csv}}" >CSV</a> | <a mat-raised-button color="primary" href="{{erddapDataService.netcdf}}">netCDF</a>
+  </div>
+  <div style="display: flex;justify-content: center;flex-width: nowrap;" *ngIf="erddapDataService.showProgressSurface">
+    <mat-spinner color="primary" mode="indeterminate" ></mat-spinner>
+  </div>
+  <div id="outer_surface_div" [ngStyle]="erddapDataService.ngPlotWidth()">
+    <div id="sst_div" [ngStyle]="{'display':'inline-block'}"  *ngIf="erddapDataService.has.get('sst')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.sstChartData"
+        [dynamicResize]="dynamicResize"
+        id="sst"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('atmp')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.atmpChartData"
+        [dynamicResize]="dynamicResize"
+        id="atmp"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('precip')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.precipChartData"
+        [dynamicResize]="dynamicResize"
+        id="precip"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('slp')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.slpChartData"
+        [dynamicResize]="dynamicResize"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('windspd')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.windspdChartData"
+        [dynamicResize]="dynamicResize"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('winddir')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.winddirChartData"
+        [dynamicResize]="dynamicResize"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('wvht')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.wvhtChartData"
+        [dynamicResize]="dynamicResize"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('dewpoint')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.dewpointChartData"
+        [dynamicResize]="dynamicResize"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('clouds')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.cloudsChartData"
+        [dynamicResize]="dynamicResize"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('water_col_ht')" >
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.water_col_htChartData"
+        [dynamicResize]="dynamicResize"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('waterlevel_met_res')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.waterlevel_met_resChartData"
+        [dynamicResize]="dynamicResize"
+      >
+      </raw-chart>
+    </div>
+    <div [ngStyle]="{'display':'inline-block'}" *ngIf="erddapDataService.has.get('waterlevel_wrt_lcd')">
+      <raw-chart
+        [ngStyle]="erddapDataService.plotStyles()"
+        [chartData]="erddapDataService.waterlevel_wrt_lcdChartData"
+        [dynamicResize]="dynamicResize"
+      >
+      </raw-chart>
+    </div>
+  </div>
+</div>
