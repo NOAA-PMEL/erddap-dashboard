@@ -1,0 +1,21 @@
+<div [ngStyle]="erddapDataService.outerDiv()">
+  <div style="margin-left: 60px" *ngIf="erddapDataService.has.get('zsal') || erddapDataService.has.get('ztmp')">
+    Data: <a mat-raised-button color="primary" href="{{erddapDataService.csv}}" >CSV</a> | <a mat-raised-button color="primary" href="{{erddapDataService.netcdf}}">netCDF</a>
+  </div>
+  <div style="display: flex;justify-content: center;flex-width: nowrap;" *ngIf="erddapDataService.showProgressProfiles">
+    <mat-spinner *ngIf="erddapDataService.showProgressProfiles" color="primary" mode="indeterminate" ></mat-spinner>
+  </div>
+  <div style="display: flex;flex-direction: row; flex-wrap: wrap" id="depth_outer" [ngStyle]="erddapDataService.ngPlotWidth()">
+    <div style="display: flex;justify-content: center;flex-width: nowrap;overflow: auto" *ngIf="erddapDataService.has.get('zsal')">
+      <div id="zaldiv" style="overflow:auto;" *ngIf="erddapDataService.has.get('zsal')"
+      >
+        <plotly-plot id="zsal" [data]="erddapDataService.zsalChartData.data" [layout]="erddapDataService.zsalChartData.layout"></plotly-plot>
+      </div>
+    </div>
+    <div style="display: flex;justify-content: center;flex-width: nowrap; overflow: auto" *ngIf="erddapDataService.has.get('ztmp')">
+      <div id="tmpdiv" style="overflow: auto;" *ngIf="erddapDataService.has.get('ztmp')">
+        <plotly-plot id="ztmp" [data]="erddapDataService.ztmpChartData.data" [layout]="erddapDataService.ztmpChartData.layout"></plotly-plot>
+      </div>
+    </div>
+  </div>
+</div>

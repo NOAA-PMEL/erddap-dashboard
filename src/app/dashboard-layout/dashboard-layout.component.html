@@ -1,0 +1,17 @@
+<!-- rowHeight="{{erddapDataService.rowHeight()}}" -->
+<mat-grid-list cols="12" rowHeight="{{erddapDataService.rowHeight()}}" [gutterSize]="5">
+  <mat-grid-tile colspan="{{erddapDataService.map_columns}}">
+    <div>
+      <div>
+        <app-dashboard-topnav ></app-dashboard-topnav>
+      </div>
+      <div>
+        <app-dashboard-leaflet></app-dashboard-leaflet>
+      </div>
+    </div>
+  </mat-grid-tile>
+  <mat-grid-tile colspan="{{erddapDataService.plot_columns}}">
+    <app-dashboard-plots *ngIf="erddapDataService.surfacePlots"></app-dashboard-plots>
+    <app-dashboard-profile *ngIf="erddapDataService.profilePlots"></app-dashboard-profile>
+  </mat-grid-tile>
+</mat-grid-list>
